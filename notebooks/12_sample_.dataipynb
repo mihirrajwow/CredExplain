@@ -42,8 +42,44 @@
   },
   {
    "cell_type": "code",
-   "execution_count": null,
+   "execution_count": 6,
    "id": "40f90a12-947a-476c-a030-f668c61953b5",
+   "metadata": {},
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "✅ Done — compatible pkl files saved\n"
+     ]
+    }
+   ],
+   "source": [
+    "import pickle\n",
+    "import xgboost as xgb\n",
+    "\n",
+    "# Load the model\n",
+    "with open(\"../data/credit_model.pkl\", \"rb\") as f:\n",
+    "    model = pickle.load(f)\n",
+    "\n",
+    "# Resave with protocol 2 — compatible across Python versions\n",
+    "with open(\"../data/credit_model_compat.pkl\", \"wb\") as f:\n",
+    "    pickle.dump(model, f, protocol=2)\n",
+    "\n",
+    "# Do the same for features\n",
+    "with open(\"../data/feature_list.pkl\", \"rb\") as f:\n",
+    "    features = pickle.load(f)\n",
+    "\n",
+    "with open(\"../data/feature_list_compat.pkl\", \"wb\") as f:\n",
+    "    pickle.dump(features, f, protocol=2)\n",
+    "\n",
+    "print(\"✅ Done — compatible pkl files saved\")"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "id": "ef415e8e-48dc-4209-9f2d-f91af3a0165f",
    "metadata": {},
    "outputs": [],
    "source": []
