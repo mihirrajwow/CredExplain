@@ -1,0 +1,73 @@
+{
+ "cells": [
+  {
+   "cell_type": "code",
+   "execution_count": 5,
+   "id": "f484bb6a-f14f-471a-ad13-c5ad2b4ff115",
+   "metadata": {},
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "Saved: (1200, 93)\n",
+      "Default rate: 0.432\n"
+     ]
+    }
+   ],
+   "source": [
+    "import pandas as pd\n",
+    "\n",
+    "df = pd.read_csv(\"../data/application_train_features.csv\")\n",
+    "\n",
+    "# Take 500 high risk, 500 low risk, 200 borderline\n",
+    "high_risk   = df[df[\"TARGET\"] == 1].sample(500, random_state=42)\n",
+    "low_risk    = df[df[\"TARGET\"] == 0].sample(500, random_state=42)\n",
+    "\n",
+    "import pickle, numpy as np\n",
+    "with open(\"../data/credit_model.pkl\", \"rb\") as f:\n",
+    "    model = pickle.load(f)\n",
+    "with open(\"../data/feature_list.pkl\", \"rb\") as f:\n",
+    "    features = pickle.load(f)\n",
+    "\n",
+    "scores = model.predict_proba(df[features])[:, 1]\n",
+    "borderline_mask = (scores > 0.48) & (scores < 0.58)\n",
+    "borderline = df[borderline_mask].sample(200, random_state=42)\n",
+    "\n",
+    "sample_df = pd.concat([high_risk, low_risk, borderline]).drop_duplicates()\n",
+    "sample_df.to_csv(\"../data/app_sample.csv\", index=False)\n",
+    "print(\"Saved:\", sample_df.shape)\n",
+    "print(\"Default rate:\", sample_df[\"TARGET\"].mean().round(3))"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "id": "40f90a12-947a-476c-a030-f668c61953b5",
+   "metadata": {},
+   "outputs": [],
+   "source": []
+  }
+ ],
+ "metadata": {
+  "kernelspec": {
+   "display_name": "Python [conda env:CEenv]",
+   "language": "python",
+   "name": "conda-env-CEenv-py"
+  },
+  "language_info": {
+   "codemirror_mode": {
+    "name": "ipython",
+    "version": 3
+   },
+   "file_extension": ".py",
+   "mimetype": "text/x-python",
+   "name": "python",
+   "nbconvert_exporter": "python",
+   "pygments_lexer": "ipython3",
+   "version": "3.11.15"
+  }
+ },
+ "nbformat": 4,
+ "nbformat_minor": 5
+}

@@ -5,6 +5,8 @@ import pickle
 import shap
 import matplotlib.pyplot as plt
 import matplotlib
+import os
+import requests
 matplotlib.use("Agg")
 
 # ── Page config ───────────────────────────────────────────────────────────────
@@ -14,9 +16,8 @@ st.set_page_config(
     layout="wide"
 )
 
-# ── Load model and data ───────────────────────────────────────────────────────
-import os
-import requests
+# ── Download model files from Hugging Face ────────────────────────────────────
+HF_BASE = "https://huggingface.co/mihirrajwow/credexplain-models/resolve/main"
 
 def download_file(url, dest):
     if not os.path.exists(dest):
@@ -27,23 +28,18 @@ def download_file(url, dest):
 
 @st.cache_resource
 def load_model():
-    download_file(
-        "https://huggingface.co/mihirrajwow/credexplain-models/resolve/main/credit_model.pkl",
-        "data/credit_model.pkl"
-    )
-    download_file(
-        "https://huggingface.co/mihirrajwow/credexplain-models/resolve/main/feature_list.pkl",
-        "data/feature_list.pkl"
-    )
+    download_file(f"{HF_BASE}/credit_model.pkl",  "data/credit_model.pkl")
+    download_file(f"{HF_BASE}/feature_list.pkl",  "data/feature_list.pkl")
     with open("data/credit_model.pkl", "rb") as f:
         model = pickle.load(f)
     with open("data/feature_list.pkl", "rb") as f:
         features = pickle.load(f)
     return model, features
 
-# @st.cache_data
-# def load_data():
-#     return pd.read_csv("data/application_train_features.csv")
+@st.cache_data
+def load_data():
+    download_file(f"{HF_BASE}/app_sample.csv", "data/app_sample.csv")
+    return pd.read_csv("data/app_sample.csv")
 
 model, features = load_model()
 df = load_data()
@@ -52,9 +48,9 @@ explainer = shap.TreeExplainer(model)
 
 # ── Role passwords ────────────────────────────────────────────────────────────
 ROLES = {
-    "officer123":    "Loan Officer",
-    "applicant123":  "Applicant",
-    "admin123":      "Admin",
+    "officer123":   "Loan Officer",
+    "applicant123": "Applicant",
+    "admin123":     "Admin",
 }
 
 # ── Fakability registry ───────────────────────────────────────────────────────
@@ -107,11 +103,10 @@ CF_MAP = {
 }
 ACTIONABLE = list(CF_MAP.keys())
 
-# ── Helper: risk → credit score ───────────────────────────────────────────────
+# ── Helpers ───────────────────────────────────────────────────────────────────
 def to_credit_score(risk):
     return int(round(900 - (risk * 600)))
 
-# ── Helper: compute SHAP for one applicant ────────────────────────────────────
 def get_shap(idx):
     applicant = X.loc[[idx]]
     shap_vals = explainer.shap_values(applicant)[0]
@@ -121,7 +116,7 @@ def get_shap(idx):
         "feature_value": applicant.values[0]
     }).sort_values("shap_value", key=abs, ascending=False)
 
-# ── Session state defaults ────────────────────────────────────────────────────
+# ── Session state ─────────────────────────────────────────────────────────────
 if "role" not in st.session_state:
     st.session_state.role = None
 if "applicant_access" not in st.session_state:
@@ -150,7 +145,7 @@ if st.session_state.role is None:
     st.stop()
 
 # ══════════════════════════════════════════════════════════════════════════════
-# SIDEBAR — shared across all roles
+# SIDEBAR
 # ══════════════════════════════════════════════════════════════════════════════
 role = st.session_state.role
 
@@ -159,7 +154,6 @@ with st.sidebar:
     st.caption(f"Signed in as: **{role}**")
     st.divider()
 
-    # Applicant selector — loan officer and admin only
     if role in ["Loan Officer", "Admin"]:
         mode = st.radio(
             "Select applicant",
@@ -184,13 +178,10 @@ with st.sidebar:
                 max_value=int(df.index.max()),
                 value=int(df.index[0])
             )
-        # Log the view
         st.session_state.audit_log.append(
-            {"role": role, "applicant_id": int(idx),
-             "action": "Viewed report"}
+            {"role": role, "applicant_id": int(idx), "action": "Viewed report"}
         )
 
-    # Applicant role — fixed to a sample declined applicant
     elif role == "Applicant":
         if st.session_state.applicant_access:
             idx = df[df["TARGET"] == 1].sample(1, random_state=77).index[0]
@@ -206,12 +197,12 @@ with st.sidebar:
         st.rerun()
 
 # ── Compute scores ────────────────────────────────────────────────────────────
-applicant     = X.loc[[idx]]
-risk_score    = model.predict_proba(applicant)[:, 1][0]
-credit_score  = to_credit_score(risk_score)
-decision      = "DECLINE" if risk_score > 0.5 else "APPROVE"
-actual        = df.loc[idx, "TARGET"]
-shap_df       = get_shap(idx)
+applicant    = X.loc[[idx]]
+risk_score   = model.predict_proba(applicant)[:, 1][0]
+credit_score = to_credit_score(risk_score)
+decision     = "DECLINE" if risk_score > 0.5 else "APPROVE"
+actual       = df.loc[idx, "TARGET"]
+shap_df      = get_shap(idx)
 
 risk_factors, protective_factors = [], []
 for _, row in shap_df.head(12).iterrows():
@@ -231,10 +222,9 @@ if role == "Loan Officer":
     st.title("Credit Decision Report")
     st.caption(f"Applicant ID: {idx}  |  Actual outcome: {'Defaulted' if actual==1 else 'Repaid'}")
 
-    # Metrics row
     c1, c2, c3, c4 = st.columns(4)
-    c1.metric("Risk Score",    f"{risk_score:.3f}",  help="0 = safe · 1 = high risk")
-    c2.metric("Credit Score",  credit_score,          help="300–900 scale")
+    c1.metric("Risk Score",    f"{risk_score:.3f}", help="0 = safe · 1 = high risk")
+    c2.metric("Credit Score",  credit_score,         help="300–900 scale")
     c3.metric("Decision",      decision)
     c4.metric("Actual Outcome","Defaulted" if actual==1 else "Repaid")
 
@@ -247,7 +237,6 @@ if role == "Loan Officer":
     left, right = st.columns([1, 1])
 
     with left:
-        # Reason codes
         st.subheader("Decision Reasons")
         st.markdown("**Risk Factors**")
         for feat, reason, sv, fv in risk_factors[:3]:
@@ -258,12 +247,10 @@ if role == "Loan Officer":
                 f"Fakability: {fake_level} — {fake_note}</span>",
                 unsafe_allow_html=True
             )
-
         st.markdown("**Protective Factors**")
         for feat, reason, sv, fv in protective_factors[:3]:
             st.markdown(f"- ✅ {reason}")
 
-        # Counterfactuals
         if decision == "DECLINE":
             st.divider()
             st.subheader("💡 What Could Change This Decision")
@@ -300,12 +287,11 @@ elif role == "Applicant":
     st.caption("This report has been shared with you by your loan officer.")
     st.divider()
 
-    # Score gauge
-    c1, c2 = st.columns(2)
     score_color = (
         "🟢" if credit_score >= 750 else
         "🟡" if credit_score >= 600 else "🔴"
     )
+    c1, c2 = st.columns(2)
     c1.metric("Your Credit Score", f"{score_color} {credit_score}",
               help="300 = high risk · 900 = excellent")
     c2.metric("Decision", decision)
@@ -316,8 +302,6 @@ elif role == "Applicant":
         st.success("✅ Your loan application has been approved.")
 
     st.divider()
-
-    # Plain English reasons — no raw feature names shown
     st.subheader("What's Affecting Your Score")
     st.markdown("**Factors working against you:**")
     for feat, reason, sv, fv in risk_factors[:3]:
@@ -327,7 +311,6 @@ elif role == "Applicant":
     for feat, reason, sv, fv in protective_factors[:3]:
         st.markdown(f"- ✅ {reason}")
 
-    # Counterfactuals — simplified language
     if decision == "DECLINE":
         st.divider()
         st.subheader("💡 How You Could Improve Your Score")
@@ -358,7 +341,6 @@ elif role == "Admin":
         "📊 Decision Report", "🔐 Access Control", "📋 Audit Log"
     ])
 
-    # ── Tab 1: full decision report (same as officer + all scores) ────────────
     with tab1:
         st.subheader(f"Applicant {idx} — Full Report")
         c1, c2, c3, c4 = st.columns(4)
@@ -395,48 +377,37 @@ elif role == "Admin":
             st.pyplot(fig)
             plt.close()
 
-    # ── Tab 2: access control ─────────────────────────────────────────────────
     with tab2:
         st.subheader("Applicant Access Control")
-        st.markdown("Control whether applicants can log in and view their credit report.")
-        st.divider()
-
         current = st.session_state.applicant_access
         status_label = "🟢 Enabled" if current else "🔴 Disabled"
         st.markdown(f"**Current applicant access:** {status_label}")
         st.caption("When enabled, applicants can sign in with code `applicant123` to view their score and improvement suggestions.")
-
         col1, col2 = st.columns(2)
         with col1:
             if st.button("✅ Enable Applicant Access",
-                         disabled=current,
-                         use_container_width=True):
+                         disabled=current, use_container_width=True):
                 st.session_state.applicant_access = True
                 st.session_state.audit_log.append({
-                    "role": "Admin",
-                    "applicant_id": "—",
+                    "role": "Admin", "applicant_id": "—",
                     "action": "Enabled applicant access"
                 })
                 st.rerun()
         with col2:
             if st.button("⛔ Disable Applicant Access",
-                         disabled=not current,
-                         use_container_width=True):
+                         disabled=not current, use_container_width=True):
                 st.session_state.applicant_access = False
                 st.session_state.audit_log.append({
-                    "role": "Admin",
-                    "applicant_id": "—",
+                    "role": "Admin", "applicant_id": "—",
                     "action": "Disabled applicant access"
                 })
                 st.rerun()
 
-    # ── Tab 3: audit log ──────────────────────────────────────────────────────
     with tab3:
         st.subheader("Audit Log")
-        st.caption("Every report view and access control change is logged here.")
         if st.session_state.audit_log:
-            audit_df = pd.DataFrame(st.session_state.audit_log)
-            st.dataframe(audit_df, use_container_width=True)
+            st.dataframe(pd.DataFrame(st.session_state.audit_log),
+                         use_container_width=True)
         else:
             st.info("No activity logged yet in this session.")
 
