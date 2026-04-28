@@ -15,17 +15,35 @@ st.set_page_config(
 )
 
 # ── Load model and data ───────────────────────────────────────────────────────
+import os
+import requests
+
+def download_file(url, dest):
+    if not os.path.exists(dest):
+        os.makedirs(os.path.dirname(dest), exist_ok=True)
+        r = requests.get(url)
+        with open(dest, "wb") as f:
+            f.write(r.content)
+
 @st.cache_resource
 def load_model():
+    download_file(
+        "https://huggingface.co/mihirrajwow/credexplain-models/resolve/main/credit_model.pkl",
+        "data/credit_model.pkl"
+    )
+    download_file(
+        "https://huggingface.co/mihirrajwow/credexplain-models/resolve/main/feature_list.pkl",
+        "data/feature_list.pkl"
+    )
     with open("data/credit_model.pkl", "rb") as f:
         model = pickle.load(f)
     with open("data/feature_list.pkl", "rb") as f:
         features = pickle.load(f)
     return model, features
 
-@st.cache_data
-def load_data():
-    return pd.read_csv("data/application_train_features.csv")
+# @st.cache_data
+# def load_data():
+#     return pd.read_csv("data/application_train_features.csv")
 
 model, features = load_model()
 df = load_data()
