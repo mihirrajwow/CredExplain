@@ -1,0 +1,17 @@
+# Data files — too large for GitHub
+data/*.csv
+data/*.pkl
+
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
+.ipynb_checkpoints/
+
+# Environment
+.env
+*.egg-info/
+
+# OS files
+.DS_Store
+Thumbs.db
