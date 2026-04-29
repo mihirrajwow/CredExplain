@@ -78,8 +78,44 @@
   },
   {
    "cell_type": "code",
-   "execution_count": null,
+   "execution_count": 7,
    "id": "ef415e8e-48dc-4209-9f2d-f91af3a0165f",
+   "metadata": {},
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "✅ Saved credit_model.json and feature_list_compat.pkl\n"
+     ]
+    }
+   ],
+   "source": [
+    "import pickle\n",
+    "import xgboost as xgb\n",
+    "\n",
+    "# Load your existing model\n",
+    "with open(\"../data/credit_model.pkl\", \"rb\") as f:\n",
+    "    model = pickle.load(f)\n",
+    "\n",
+    "# Save in XGBoost native format — version independent\n",
+    "model.save_model(\"../data/credit_model.json\")\n",
+    "\n",
+    "# Features list is fine with pickle protocol 2\n",
+    "with open(\"../data/feature_list.pkl\", \"rb\") as f:\n",
+    "    features = pickle.load(f)\n",
+    "\n",
+    "import pickle\n",
+    "with open(\"../data/feature_list_compat.pkl\", \"wb\") as f:\n",
+    "    pickle.dump(features, f, protocol=2)\n",
+    "\n",
+    "print(\"✅ Saved credit_model.json and feature_list_compat.pkl\")"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "id": "b2862dc4-a337-4dd0-824d-24847a145631",
    "metadata": {},
    "outputs": [],
    "source": []
