@@ -28,11 +28,11 @@ def download_file(url, dest):
 
 @st.cache_resource
 def load_model():
-    download_file(f"{HF_BASE}/credit_model_compat.pkl",  "data/credit_model_compat.pkl")
-    download_file(f"{HF_BASE}/feature_list_compat.pkl",  "data/feature_list_compat.pkl")
-    with open("data/credit_model_compat.pkl", "rb") as f:
+    download_file(f"{HF_BASE}/credit_model_compat.pkl",  "data/credit_model.pkl")
+    download_file(f"{HF_BASE}/feature_list_compat.pkl",  "data/feature_list.pkl")
+    with open("data/credit_model.pkl", "rb") as f:
         model = pickle.load(f)
-    with open("data/feature_list_compat.pkl", "rb") as f:
+    with open("data/feature_list.pkl", "rb") as f:
         features = pickle.load(f)
     return model, features
 
