@@ -28,8 +28,8 @@ def download_file(url, dest):
 
 @st.cache_resource
 def load_model():
-    download_file(f"{HF_BASE}/credit_model.pkl",  "data/credit_model.pkl")
-    download_file(f"{HF_BASE}/feature_list.pkl",  "data/feature_list.pkl")
+    download_file(f"{HF_BASE}/credit_model.pkl?download=true",  "data/credit_model.pkl")
+    download_file(f"{HF_BASE}/feature_list.pkl?download=true",  "data/feature_list.pkl")
     with open("data/credit_model.pkl", "rb") as f:
         model = pickle.load(f)
     with open("data/feature_list.pkl", "rb") as f:
@@ -38,15 +38,12 @@ def load_model():
 
 @st.cache_data
 def load_data():
-    download_file(f"{HF_BASE}/app_sample.csv", "data/app_sample.csv")
+    download_file(f"{HF_BASE}/app_sample.csv?download=true", "data/app_sample.csv")
     return pd.read_csv("data/app_sample.csv")
 
 model, features = load_model()
 df = load_data()
-st.write("df columns:", df.columns.tolist()[:5])
-st.write("features:", features[:5])
-st.write("df shape:", df.shape)
-st.stop()
+X = df[features]
 explainer = shap.TreeExplainer(model)
 
 # ── Role passwords ────────────────────────────────────────────────────────────
