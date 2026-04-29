@@ -18,13 +18,14 @@ st.set_page_config(
 )
 
 # ── Download model files from Hugging Face ────────────────────────────────────
-HF_BASE = "https://huggingface.co/mihirrajwow/credexplain-models/resolve/main"
+HF_BASE = "https://huggingface.co/mihirrajwow/credexplain/resolve/main"
 
 def download_file(url, dest):
-    os.makedirs(os.path.dirname(dest), exist_ok=True)
-    r = requests.get(url)
-    with open(dest, "wb") as f:
-        f.write(r.content)
+    if not os.path.exists(dest):
+        os.makedirs(os.path.dirname(dest), exist_ok=True)
+        r = requests.get(url)
+        with open(dest, "wb") as f:
+            f.write(r.content)
 
 @st.cache_resource
 def load_model():
@@ -43,16 +44,6 @@ def load_model():
 def load_data():
     download_file(f"{HF_BASE}/app_sample.csv", "data/app_sample.csv")
     return pd.read_csv("data/app_sample.csv")
-
-model, features = load_model()
-df = load_data()
-
-# TEMPORARY DEBUG — remove after fix
-st.write("CSV columns:", df.columns.tolist())
-st.write("Features expected:", features)
-st.stop()
-
-X = df[features]
 
 model, features = load_model()
 df = load_data()
