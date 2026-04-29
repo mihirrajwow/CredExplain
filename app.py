@@ -46,6 +46,16 @@ def load_data():
 
 model, features = load_model()
 df = load_data()
+
+# TEMPORARY DEBUG — remove after fix
+st.write("CSV columns:", df.columns.tolist())
+st.write("Features expected:", features)
+st.stop()
+
+X = df[features]
+
+model, features = load_model()
+df = load_data()
 X = df[features]
 explainer = shap.TreeExplainer(model)
 
