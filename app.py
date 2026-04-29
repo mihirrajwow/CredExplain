@@ -18,7 +18,7 @@ st.set_page_config(
 )
 
 # ── Download model files from Hugging Face ────────────────────────────────────
-HF_BASE = "https://huggingface.co/mihirrajwow/credexplain/resolve/main"
+HF_BASE = "https://huggingface.co/mihirrajwow/credexplain-models/resolve/main"
 
 def download_file(url, dest):
     if not os.path.exists(dest):
