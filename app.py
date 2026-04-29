@@ -3,7 +3,6 @@ import pandas as pd
 import numpy as np
 import pickle
 import shap
-import xgboost as xgb
 import matplotlib.pyplot as plt
 import matplotlib
 import os
@@ -21,28 +20,31 @@ st.set_page_config(
 HF_BASE = "https://huggingface.co/mihirrajwow/credexplain-models/resolve/main"
 
 def download_file(url, dest):
-    os.makedirs(os.path.dirname(dest), exist_ok=True)
-    r = requests.get(url + "?download=true", allow_redirects=True)
-    with open(dest, "wb") as f:
-        f.write(r.content)
+    if not os.path.exists(dest):
+        os.makedirs(os.path.dirname(dest), exist_ok=True)
+        r = requests.get(url)
+        with open(dest, "wb") as f:
+            f.write(r.content)
 
 @st.cache_resource
 def load_model():
-    download_file(f"{HF_BASE}/credit_model.json",  "data/credit_model.json")
-    download_file(f"{HF_BASE}/feature_list.txt",   "data/feature_list.txt")
-    
-    model = xgb.XGBClassifier()
-    model.load_model("data/credit_model.json")
-    
-    with open("data/feature_list.txt", "r") as f:
-        features = [line.strip() for line in f.readlines()]
-    
+    download_file(f"{HF_BASE}/credit_model.pkl",  "data/credit_model.pkl")
+    download_file(f"{HF_BASE}/feature_list.pkl",  "data/feature_list.pkl")
+    with open("data/credit_model.pkl", "rb") as f:
+        model = pickle.load(f)
+    with open("data/feature_list.pkl", "rb") as f:
+        features = pickle.load(f)
     return model, features
 
 @st.cache_data
 def load_data():
     download_file(f"{HF_BASE}/app_sample.csv", "data/app_sample.csv")
     return pd.read_csv("data/app_sample.csv")
+
+model, features = load_model()
+df = load_data()
+X = df[features]
+explainer = shap.TreeExplainer(model)
 
 # ── Role passwords ────────────────────────────────────────────────────────────
 ROLES = {
@@ -141,12 +143,6 @@ if st.session_state.role is None:
                 st.error("Invalid access code")
         st.caption("officer123 · applicant123 · admin123")
     st.stop()
-
-# ── Load data (only runs if logged in) ───────────────────────────────────────
-model, features = load_model()
-df = load_data()
-X = df[features]
-explainer = shap.TreeExplainer(model)
 
 # ══════════════════════════════════════════════════════════════════════════════
 # SIDEBAR
