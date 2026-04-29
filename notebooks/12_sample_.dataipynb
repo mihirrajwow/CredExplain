@@ -144,7 +144,7 @@
   },
   {
    "cell_type": "code",
-   "execution_count": 9,
+   "execution_count": 11,
    "id": "b43b1e88-c8e9-45d2-a413-3d326dd3a960",
    "metadata": {},
    "outputs": [
@@ -152,8 +152,10 @@
      "name": "stdout",
      "output_type": "stream",
      "text": [
-      "Missing columns: 0\n",
-      "[]\n"
+      "Missing from CSV: []\n",
+      "\n",
+      "Total features expected: 26\n",
+      "Total columns in CSV: 93\n"
      ]
     }
    ],
@@ -161,14 +163,15 @@
     "import pandas as pd\n",
     "import pickle\n",
     "\n",
+    "df = pd.read_csv(\"../data/app_sample.csv\")\n",
+    "\n",
     "with open(\"../data/feature_list.pkl\", \"rb\") as f:\n",
     "    features = pickle.load(f)\n",
     "\n",
-    "df = pd.read_csv(\"../data/app_sample.csv\")\n",
-    "\n",
     "missing = [f for f in features if f not in df.columns]\n",
-    "print(f\"Missing columns: {len(missing)}\")\n",
-    "print(missing)"
+    "print(\"Missing from CSV:\", missing)\n",
+    "print(\"\\nTotal features expected:\", len(features))\n",
+    "print(\"Total columns in CSV:\", len(df.columns))"
    ]
   },
   {
