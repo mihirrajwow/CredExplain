@@ -44,11 +44,6 @@ def load_data():
     download_file(f"{HF_BASE}/app_sample.csv", "data/app_sample.csv")
     return pd.read_csv("data/app_sample.csv")
 
-model, features = load_model()
-df = load_data()
-X = df[features]
-explainer = shap.TreeExplainer(model)
-
 # ── Role passwords ────────────────────────────────────────────────────────────
 ROLES = {
     "officer123":   "Loan Officer",
@@ -146,6 +141,12 @@ if st.session_state.role is None:
                 st.error("Invalid access code")
         st.caption("officer123 · applicant123 · admin123")
     st.stop()
+
+# ── Load data (only runs if logged in) ───────────────────────────────────────
+model, features = load_model()
+df = load_data()
+X = df[features]
+explainer = shap.TreeExplainer(model)
 
 # ══════════════════════════════════════════════════════════════════════════════
 # SIDEBAR
