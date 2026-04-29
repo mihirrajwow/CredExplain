@@ -43,7 +43,10 @@ def load_data():
 
 model, features = load_model()
 df = load_data()
-X = df[features]
+st.write("df columns:", df.columns.tolist()[:5])
+st.write("features:", features[:5])
+st.write("df shape:", df.shape)
+st.stop()
 explainer = shap.TreeExplainer(model)
 
 # ── Role passwords ────────────────────────────────────────────────────────────
