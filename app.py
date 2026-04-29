@@ -21,11 +21,10 @@ st.set_page_config(
 HF_BASE = "https://huggingface.co/mihirrajwow/credexplain-models/resolve/main"
 
 def download_file(url, dest):
-    if not os.path.exists(dest):
-        os.makedirs(os.path.dirname(dest), exist_ok=True)
-        r = requests.get(url)
-        with open(dest, "wb") as f:
-            f.write(r.content)
+    os.makedirs(os.path.dirname(dest), exist_ok=True)
+    r = requests.get(url)
+    with open(dest, "wb") as f:
+        f.write(r.content)
 
 @st.cache_resource
 def load_model():

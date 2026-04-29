@@ -114,8 +114,67 @@
   },
   {
    "cell_type": "code",
-   "execution_count": null,
+   "execution_count": 8,
    "id": "b2862dc4-a337-4dd0-824d-24847a145631",
+   "metadata": {},
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "✅ Saved feature_list.txt\n",
+      "['ANNUITY_TO_INCOME', 'CREDIT_TO_INCOME', 'CREDIT_TO_GOODS', 'EMPLOYMENT_RATIO', 'INCOME_PER_PERSON', 'CHILDREN_RATIO', 'EXT_SOURCE_1', 'EXT_SOURCE_1_MISSING', 'EXT_SOURCE_2', 'EXT_SOURCE_3', 'AMT_INCOME_TOTAL', 'AMT_CREDIT', 'AMT_ANNUITY', 'DAYS_BIRTH', 'DAYS_EMPLOYED', 'DAYS_EMPLOYED_MISSING', 'CNT_CHILDREN', 'CNT_FAM_MEMBERS', 'NAME_CONTRACT_TYPE_ENC', 'CODE_GENDER_ENC', 'NAME_INCOME_TYPE_ENC', 'NAME_EDUCATION_TYPE_ENC', 'NAME_FAMILY_STATUS_ENC', 'OCCUPATION_TYPE_ENC', 'DOCUMENT_COUNT', 'CONTACT_REACHABILITY']\n"
+     ]
+    }
+   ],
+   "source": [
+    "import pickle\n",
+    "\n",
+    "with open(\"../data/feature_list.pkl\", \"rb\") as f:\n",
+    "    features = pickle.load(f)\n",
+    "\n",
+    "# Save as plain text — one feature name per line\n",
+    "with open(\"../data/feature_list.txt\", \"w\") as f:\n",
+    "    for feat in features:\n",
+    "        f.write(feat + \"\\n\")\n",
+    "\n",
+    "print(\"✅ Saved feature_list.txt\")\n",
+    "print(features)"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 9,
+   "id": "b43b1e88-c8e9-45d2-a413-3d326dd3a960",
+   "metadata": {},
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "Missing columns: 0\n",
+      "[]\n"
+     ]
+    }
+   ],
+   "source": [
+    "import pandas as pd\n",
+    "import pickle\n",
+    "\n",
+    "with open(\"../data/feature_list.pkl\", \"rb\") as f:\n",
+    "    features = pickle.load(f)\n",
+    "\n",
+    "df = pd.read_csv(\"../data/app_sample.csv\")\n",
+    "\n",
+    "missing = [f for f in features if f not in df.columns]\n",
+    "print(f\"Missing columns: {len(missing)}\")\n",
+    "print(missing)"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "id": "a8960073-f046-4aaf-b004-97f1c5436f5d",
    "metadata": {},
    "outputs": [],
    "source": []
