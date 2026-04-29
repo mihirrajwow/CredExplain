@@ -29,14 +29,15 @@ def download_file(url, dest):
 
 @st.cache_resource
 def load_model():
-    download_file(f"{HF_BASE}/credit_model.json",       "data/credit_model.json")
-    download_file(f"{HF_BASE}/feature_list_compat.pkl", "data/feature_list.pkl")
+    download_file(f"{HF_BASE}/credit_model.json",  "data/credit_model.json")
+    download_file(f"{HF_BASE}/feature_list.txt",   "data/feature_list.txt")
     
     model = xgb.XGBClassifier()
     model.load_model("data/credit_model.json")
     
-    with open("data/feature_list.pkl", "rb") as f:
-        features = pickle.load(f)
+    with open("data/feature_list.txt", "r") as f:
+        features = [line.strip() for line in f.readlines()]
+    
     return model, features
 
 @st.cache_data
